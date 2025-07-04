@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 
-const generateShortCode = () => {
-  return Math.random().toString(36).substring(2, 8);
+const BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+const generateRandomCode = (length = 4) => {
+  let code = "";
+  for (let i = 0; i < length; i++) {
+    code += BASE62.charAt(Math.floor(Math.random() * BASE62.length));
+  }
+  return code;
 };
 
 const getTimeRemaining = (endTime) => {
@@ -27,7 +33,8 @@ const Countdown = ({ expiresAt }) => {
     return () => clearInterval(interval);
   }, [expiresAt]);
 
-  if (timeLeft.total <= 0) return <span style={{ color: "#f44336" }}>Expired</span>;
+  if (timeLeft.total <= 0)
+    return <span style={{ color: "#f44336", fontWeight: "bold" }}>Expired</span>;
 
   return (
     <span>
@@ -41,19 +48,22 @@ const App = () => {
   const [url, setUrl] = useState("");
   const [shortLinks, setShortLinks] = useState([]);
 
+  const CUSTOM_DOMAIN = window.location.origin; // This uses your current domain (localhost or deployed)
+
   const handleShorten = () => {
-    if (!url.trim()) return;
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) return;
 
     let shortCode;
     do {
-      shortCode = generateShortCode();
-    } while (shortLinks.some(link => link.shortCode === shortCode));
+      shortCode = generateRandomCode(4);
+    } while (shortLinks.some((link) => link.shortCode === shortCode));
 
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 min
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // expires in 30 minutes
 
     const newLink = {
-      original: url,
-      short: `${window.location.origin}/${shortCode}`,
+      original: trimmedUrl,
+      short: `${CUSTOM_DOMAIN}/${shortCode}`,
       shortCode,
       expiresAt,
     };
@@ -64,11 +74,12 @@ const App = () => {
 
   const styles = {
     app: {
-      fontFamily: "'Segoe UI', sans-serif",
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       background: "linear-gradient(to right, #0f2027, #203a43, #2c5364)",
       color: "#f5f5f5",
       minHeight: "100vh",
       paddingBottom: "60px",
+      paddingTop: "20px",
     },
     navbar: {
       padding: "20px",
@@ -129,9 +140,6 @@ const App = () => {
       cursor: "pointer",
       transition: "0.3s",
     },
-    buttonHover: {
-      backgroundColor: "#303f9f",
-    },
     linkCard: {
       marginTop: "20px",
       padding: "20px",
@@ -148,6 +156,7 @@ const App = () => {
     smallText: {
       fontSize: "0.85rem",
       color: "#bbb",
+      wordBreak: "break-word",
     },
     footer: {
       marginTop: "40px",
@@ -180,7 +189,9 @@ const App = () => {
               onChange={(e) => setUrl(e.target.value)}
               style={styles.input}
             />
-            <button style={styles.button} onClick={handleShorten}>Shorten URL</button>
+            <button style={styles.button} onClick={handleShorten}>
+              Shorten URL
+            </button>
           </div>
         </section>
 
@@ -190,13 +201,22 @@ const App = () => {
             {shortLinks.map((link, i) => (
               <div key={i} style={styles.linkCard}>
                 <p>
-                  <strong>Original:</strong><br />
-                  <span style={styles.smallText}>{link.original}</span>
+                  <strong>Original:</strong>
+                  <br />
+                  <a
+                    href={link.original}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={styles.smallText}
+                  >
+                    {link.original}
+                  </a>
                 </p>
                 <p>
-                  <strong>Shortened:</strong>{" "}
-                  <a href={link.original} target="_blank" rel="noreferrer" style={styles.link}>
-                    {link.short}
+                  <strong>Short URL:</strong>{" "}
+                  <a href={link.short} target="_blank" rel="noreferrer" style={styles.link}>
+                    {/* Show short/ + code */}
+                    short/{link.shortCode}
                   </a>
                 </p>
                 <p>
